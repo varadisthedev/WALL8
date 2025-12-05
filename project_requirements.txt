@@ -1,0 +1,27 @@
+-target audience: students
+-objective: allows users to record their expenses, categorize them, and view insights through charts or summaries.
+
+# phase 1  
+1. Add Daily Expenses
+Each expense entry must include: Amount , Category (Food, Travel, Shopping,
+Entertainment, Others, etc.) , Date , Short note/description (optional).
+
+2. View All Expenses
+A simple list/table showing: Date , Category , Amount , Notes (if any).Supports
+pagination or scrolling.
+
+4. Visual Insights (Charts)
+Show the user how they spend their money using simple charts. Use any chart
+library like: Chart.js or plotly etc.
+
+
+# phase 2
+3. Categorize & Filter
+Allow users to: Filter expenses by category , Filter by date range (e.g., this
+week, this month) , Search by keywords .
+
+# phase 3
+
+5. Basic Analytics (optional)
+Display small insights such as: Total spent this month , Highest spending
+category , Average daily spending etc.
