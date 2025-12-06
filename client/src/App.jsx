@@ -2,6 +2,8 @@ import "./App.css";
 import { AddExpenses } from "./components/AddExpenses";
 import { Tailwind } from "./components/Tailwind";
 import { Test } from "./components/Test";
+import { RecentExpenses } from "./components/RecentExpenses";
+
 
 function App() {
   return (
@@ -16,8 +18,11 @@ function App() {
   <AddExpenses />
 </div>
 
+  
+      <RecentExpenses />
     </>
   );
 }
 
 export default App;
+
