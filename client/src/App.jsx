@@ -1,10 +1,11 @@
 import "./App.css";
-import { AddExpenses } from "./components/AddExpenses";
 import { Card } from "./components/Card";
 import { Tailwind } from "./components/Tailwind";
 import { Test } from "./components/Test";
+import { Navbar } from "./components/Navbar";
+import { Sidebar } from "./components/Sidebar";
+import { AddExpenses } from "./components/AddExpenses";
 import { RecentExpenses } from "./components/RecentExpenses";
-
 function App() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-800 via-sky-900 to-indigo-900">
@@ -15,15 +16,18 @@ function App() {
         <p className="bg-orange-500 text-white px-4 py-1 rounded">
           Hello there!
         </p>
-
-        <AddExpenses />
-
-        <div className="flex flex-row items-center justify-center gap-44">
+          <div style={{display: "flex", flexDirection: "column"}}>
+      <Navbar />
+       <div style={{ display: "flex", flex: 1 }}>
+        <Sidebar />
+         <div style={{ padding: "20px", flex: 1 }}>
+          <AddExpenses />
           <RecentExpenses />
+        </div>
+        </div>
         </div>
       </div>
     </div>
   );
 }
-
 export default App;
