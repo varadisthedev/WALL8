@@ -6,6 +6,8 @@ import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
 import { AddExpenses } from "./components/AddExpenses";
 import { RecentExpenses } from "./components/RecentExpenses";
+import axios from "axios";
+
 function App() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-800 via-sky-900 to-indigo-900">
@@ -16,15 +18,15 @@ function App() {
         <p className="bg-orange-500 text-white px-4 py-1 rounded">
           Hello there!
         </p>
-          <div style={{display: "flex", flexDirection: "column"}}>
-      <Navbar />
-       <div style={{ display: "flex", flex: 1 }}>
-        <Sidebar />
-         <div style={{ padding: "20px", flex: 1 }}>
-          <AddExpenses />
-          <RecentExpenses />
-        </div>
-        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <Navbar />
+          <div style={{ display: "flex", flex: 1 }}>
+            <Sidebar />
+            <div style={{ padding: "20px", flex: 1 }}>
+              <AddExpenses />
+              <RecentExpenses />
+            </div>
+          </div>
         </div>
       </div>
     </div>
