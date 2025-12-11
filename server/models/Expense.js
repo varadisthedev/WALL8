@@ -209,14 +209,58 @@ expenseSchema.statics.getExpensesByDateRange = async function (userId, startDate
 };
 
 // Static method - Search expenses
-expenseSchema.statics.searchExpenses = async function (userId, searchTerm) {
-  return await this.find({
-    userId: userId,
-    $or: [
-      { note: { $regex: searchTerm, $options: 'i' } },
-      { category: { $regex: searchTerm, $options: 'i' } }
-    ]
-  }).sort({ date: -1 });
+// Static method - Advanced Find (Filter, Search, Pagination)
+expenseSchema.statics.getExpenses = async function (userId, queryParams) {
+  const {
+    search,
+    category,
+    startDate,
+    endDate,
+    page = 1,
+    limit = 10,
+    sortValue = -1
+  } = queryParams;
+
+  const query = { userId };
+
+  // Search by keyword
+  if (search) {
+    query.$or = [
+      { note: { $regex: search, $options: 'i' } },
+      { category: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  // Filter by category
+  if (category && category !== 'All') {
+    query.category = category;
+  }
+
+  // Filter by date range
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
+  }
+
+  const skip = (page - 1) * limit;
+
+  const expenses = await this.find(query)
+    .sort({ date: sortValue })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await this.countDocuments(query);
+
+  return {
+    data: expenses,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: Math.ceil(total / limit),
+      totalExpenses: total,
+      hasMore: skip + expenses.length < total
+    }
+  };
 };
 
 // Pre-save middleware - Log when expense is created
