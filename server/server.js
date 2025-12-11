@@ -5,7 +5,7 @@ require('dotenv').config();
 const { clerkMiddleware } = require('@clerk/express');
 const connectToMongoDB = require('./config/connect');
 const expenseRoutes = require('./routes/expenseRoutes');
-const extraRoutes = require('./routes/extraRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
@@ -35,7 +35,7 @@ connectToMongoDB()
 // Routes
 app.use('/api/user', userRoutes);        // User & profile routes
 app.use('/api/expenses', expenseRoutes); // Expense routes (protected)
-app.use('/api', extraRoutes);            // Analytics & utility routes
+app.use('/api/analytics', analyticsRoutes);            // Analytics & utility routes
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

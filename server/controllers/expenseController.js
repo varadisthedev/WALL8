@@ -37,31 +37,16 @@ exports.addExpense = async (req, res) => {
     }
 };
 
-// @desc    Get all expenses (with pagination)
+// @desc    Get all expenses (with pagination, filter, search)
 // @route   GET /api/expenses
 // @access  Private
 exports.getAllExpenses = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-
-        const expenses = await Expense.find({ userId: req.userId })
-            .sort({ date: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Expense.countDocuments({ userId: req.userId });
+        const result = await Expense.getExpenses(req.userId, req.query);
 
         res.status(200).json({
             success: true,
-            data: expenses,
-            pagination: {
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
-                totalExpenses: total,
-                hasMore: skip + expenses.length < total
-            }
+            ...result
         });
     } catch (error) {
         res.status(500).json({
