@@ -1,43 +1,78 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api/axios";
 
-export const AddExpenses = () => {
+export const AddExpenses = ({ onExpenseAdded }) => {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(amount, category, date, note);
+    setLoading(true);
+    try {
+      if (!amount || !category) {
+        alert("Please fill in amount and category");
+        return;
+      }
+
+      await api.post('/expenses', {
+        amount: Number(amount),
+        category,
+        date,
+        note
+      });
+
+      // Reset form
+      setAmount("");
+      setCategory("");
+      setNote("");
+      
+      // Refresh parent if callback provided
+      if (onExpenseAdded) onExpenseAdded();
+      
+      // alert("Expense added successfully!"); // Removed alert for smoother UX
+    } catch (error) {
+      console.error("Error adding expense", error);
+      alert("Failed to add expense");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
-    <>
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-row flex-wrap gap-8 p-10 backdrop-blur-xl bg-white/20 border border-white/30 rounded-2xl shadow-xl max-w-6xl mx-auto mt-10 items-end
-        bg-linear-to-br before:from-white/20 before:to-transparent"
-      >
-        <div className="w-36">
-          <label className="text-white/95 font-medium">Enter Amount :</label>
-          <input
-            type="text"
-            placeholder="amount in INR"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
+    <div className="glass-card p-6 h-fit text-gray-800">
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+         <span className="p-1 bg-amber-100 rounded text-amber-600">💸</span>
+         Add New Expense
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-gray-600 text-sm font-medium mb-1">Amount (₹)</label>
+          <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full bg-white/50 border border-gray-300 text-gray-800 rounded-xl pl-8 pr-3 py-2 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all"
+                placeholder="0.00"
+                min="0"
+              />
+          </div>
         </div>
 
-        <div className="w-36">
-          {" "}
-          <label className="text-white/95 font-medium">Category:</label>
+        <div>
+          <label className="block text-gray-600 text-sm font-medium mb-1">Category</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="w-full bg-white/50 border border-gray-300 text-gray-800 rounded-xl px-3 py-2 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all appearance-none"
+            style={{ backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.7rem top 50%', backgroundSize: '0.65rem auto' }}
+
           >
-            <option value="">Select</option>
+            <option value="">Select Category</option>
             <option value="Food">Food</option>
             <option value="Travel">Travel</option>
             <option value="Shopping">Shopping</option>
@@ -46,34 +81,35 @@ export const AddExpenses = () => {
           </select>
         </div>
 
-        <div className="w-56">
-          <label className="text-white/95 font-medium">Date:</label>
+        <div>
+          <label className="block text-gray-600 text-sm font-medium mb-1">Date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="w-full bg-white/50 border border-gray-300 text-gray-800 rounded-xl px-3 py-2 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all"
           />
         </div>
 
-        <div className="w-56">
-          <label className="text-white/95 font-medium">Description:</label>
-          <input
+        <div>
+           <label className="block text-gray-600 text-sm font-medium mb-1">Note (Optional)</label>
+           <input
             type="text"
-            placeholder="Optional"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="border rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="w-full bg-white/50 border border-gray-300 text-gray-800 rounded-xl px-3 py-2 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all"
+            placeholder="Description..."
           />
         </div>
+
         <button
           type="submit"
-          className="px-6 py-3 bg-emerald-400/80 text-white font-semibold rounded-xl shadow-md shadow-emerald-500/40 
-          hover:bg-emerald-400 transition-all duration-200"
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 transition-all mt-4 disabled:opacity-50 transform hover:-translate-y-0.5"
         >
-          Add
+          {loading ? "Adding..." : "Add Expense"}
         </button>
       </form>
-    </>
+    </div>
   );
 };
