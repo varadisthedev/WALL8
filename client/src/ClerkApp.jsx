@@ -1,0 +1,57 @@
+import React, { useEffect } from 'react';
+import { ClerkProvider, useAuth, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import { setupAxiosInterceptors } from './api/axios';
+import App from './App';
+import Login from './pages/Login';
+import SignUpPage from './pages/SignUp';
+import Onboarding from './pages/Onboarding';
+
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Publishable Key");
+}
+
+function AxiosInterceptor() {
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    setupAxiosInterceptors(getToken);
+  }, [getToken]);
+
+  return null;
+}
+
+export default function ClerkApp() {
+  const navigate = useNavigate();
+
+  return (
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      navigate={(to) => navigate(to)}
+    >
+      <AxiosInterceptor />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/sign-up" element={<SignUpPage />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        
+        <Route 
+          path="/" 
+          element={
+            <>
+              <SignedIn>
+                <App />
+              </SignedIn>
+              <SignedOut>
+                 <Login />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route path="/dashboard" element={<App />} />
+      </Routes>
+    </ClerkProvider>
+  );
+}
