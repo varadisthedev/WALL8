@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSignIn } from '@clerk/clerk-react';
 import { AreaChart, BarChart, TrendingUp, PieChart, Shield, Zap, X, ArrowRight, Wallet, CheckCircle } from 'lucide-react';
