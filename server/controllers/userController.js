@@ -251,6 +251,12 @@ exports.getBudgetStatus = async (req, res) => {
         const totalBudget = user.totalBudget;
         const totalSpent = spending.reduce((sum, s) => sum + s.spent, 0);
 
+        // Get transaction count for this month
+        const transactionCount = await Expense.countDocuments({
+            userId: req.userId,
+            date: { $gte: startOfMonth }
+        });
+
         res.status(200).json({
             success: true,
             data: {
@@ -259,7 +265,14 @@ exports.getBudgetStatus = async (req, res) => {
                 totalRemaining: Math.max(0, totalBudget - totalSpent),
                 overallPercentage: totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(2) : 0,
                 categories: budgetStatus,
-                monthlyAllowance: user.profile.monthlyAllowance
+                monthlyAllowance: user.profile.monthlyAllowance,
+                currentMonth: {
+                    total: totalSpent,
+                    count: transactionCount,
+                    average: transactionCount > 0 ? totalSpent / transactionCount : 0
+                },
+                remaining: Math.max(0, user.profile.monthlyAllowance - totalSpent),
+                isOverBudget: totalSpent > user.profile.monthlyAllowance
             }
         });
     } catch (error) {

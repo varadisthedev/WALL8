@@ -6,6 +6,7 @@ import App from './App';
 import Login from './pages/Login';
 import SignUpPage from './pages/SignUp';
 import Onboarding from './pages/Onboarding';
+import LandingPage from './pages/LandingPage';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -46,7 +47,7 @@ export default function ClerkApp() {
                 <App />
               </SignedIn>
               <SignedOut>
-                 <Navigate to="/login" replace />
+                <LandingPage />
               </SignedOut>
             </>
           } 

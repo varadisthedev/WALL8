@@ -6,11 +6,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // Auto-categorize expense based on description
 exports.categorizeExpense = async (description, amount) => {
     try {
-        if (!process.env.GEMINI_API_KEY) {
-            console.log('Gemini API key not configured, using fallback');
+        const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : null;
+
+        if (!apiKey) {
+            console.log('⚠️ Gemini API key not configured (or empty), using fallback category "Others"');
             return 'Others';
         }
 
+        console.log(`🤖 Auto-categorizing "${description}" (₹${amount})...`);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const prompt = `Based on this expense description: "${description}" (amount: ₹${amount}), categorize it into ONE of these categories ONLY: Food, Travel, Shopping, Entertainment, Others. 
@@ -27,19 +30,34 @@ Examples:
 
         const result = await model.generateContent(prompt);
         const response = result.response.text().trim();
+        console.log(`📥 Gemini Response: "${response}"`);
 
         // Validate response
         const validCategories = ['Food', 'Travel', 'Shopping', 'Entertainment', 'Others'];
-        if (validCategories.includes(response)) {
-            console.log(`✨ AI Categorized "${description}" as: ${response}`);
-            return response;
+
+        // Handle case where AI might return "Category: Food" or similar
+        const cleanResponse = response.replace(/^Category:\s*/i, '').replace(/\.$/, '').trim();
+
+        if (validCategories.includes(cleanResponse)) {
+            console.log(`✨ Categorized as: ${cleanResponse}`);
+            return cleanResponse;
+        }
+
+        // Try case-insensitive match
+        const match = validCategories.find(c => c.toLowerCase() === cleanResponse.toLowerCase());
+        if (match) {
+            console.log(`✨ Categorized as (case-corrected): ${match}`);
+            return match;
         }
 
         // Fallback to Others if invalid
-        console.log('AI returned invalid category, using Others');
+        console.log(`⚠️ AI returned invalid category "${response}", using Others`);
         return 'Others';
     } catch (error) {
-        console.error('Error in AI categorization:', error.message);
+        console.error('❌ Error in AI categorization:', error.message);
+        if (error.message.includes('API key')) {
+            console.error('👉 Please check your GEMINI_API_KEY in server/.env file');
+        }
         return 'Others';
     }
 };
@@ -48,6 +66,7 @@ Examples:
 exports.generateSpendingInsights = async (userData, expenseData, budgetStatus) => {
     try {
         if (!process.env.GEMINI_API_KEY) {
+            console.log('⚠️ GEMINI_API_KEY not found in environment variables');
             return {
                 insights: [
                     "Add your Gemini API key to get AI-powered spending insights!",
@@ -61,6 +80,7 @@ exports.generateSpendingInsights = async (userData, expenseData, budgetStatus) =
             };
         }
 
+        console.log('🤖 Generating AI insights with Gemini...');
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const prompt = `You are a financial advisor helping a student manage their money. Analyze this spending data and provide insights:
@@ -93,8 +113,10 @@ Format your response as JSON:
   "tips": ["tip 1", "tip 2", "tip 3"]
 }`;
 
+        console.log('📤 Sending request to Gemini API...');
         const result = await model.generateContent(prompt);
         const response = result.response.text().trim();
+        console.log('📥 Received response from Gemini API');
 
         // Try to parse JSON response
         try {
@@ -104,7 +126,8 @@ Format your response as JSON:
             console.log('✨ Generated AI Insights successfully');
             return parsed;
         } catch (parseError) {
-            console.error('Failed to parse AI response, using fallback');
+            console.error('⚠️ Failed to parse AI response:', parseError.message);
+            console.log('Raw response:', response);
             return {
                 insights: [
                     `You've spent ₹${budgetStatus.currentMonth?.total || 0} this month across ${budgetStatus.currentMonth?.count || 0} transactions.`,
@@ -121,7 +144,8 @@ Format your response as JSON:
             };
         }
     } catch (error) {
-        console.error('Error generating insights:', error.message);
+        console.error('❌ Error generating insights:', error.message);
+        console.error('Full error:', error);
         return {
             insights: [
                 "Unable to generate AI insights at this time.",

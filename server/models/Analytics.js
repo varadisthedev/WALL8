@@ -102,6 +102,55 @@ class Analytics {
     return dailyData;
   }
 
+  static async getTodayHourlyTrend(userId) {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    // Get timezone offset in milliseconds
+    const timezoneOffset = now.getTimezoneOffset() * 60 * 1000;
+
+    const hourlyData = await Expense.aggregate([
+      { $match: { userId, date: { $gte: startOfDay, $lte: endOfDay } } },
+      {
+        $addFields: {
+          // Convert UTC date to local time by subtracting timezone offset
+          localDate: { $subtract: ['$date', timezoneOffset] }
+        }
+      },
+      {
+        $group: {
+          _id: { $hour: '$localDate' },
+          total: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Create array for all 24 hours (0-23) with data if exists
+    const fullDayData = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const hourData = hourlyData.find(d => d._id === hour);
+      fullDayData.push({
+        _id: hour,
+        hour: hour,
+        label: this.formatHourLabel(hour),
+        total: hourData?.total || 0,
+        count: hourData?.count || 0
+      });
+    }
+
+    return fullDayData;
+  }
+
+  static formatHourLabel(hour) {
+    if (hour === 0) return '12 AM';
+    if (hour < 12) return `${hour} AM`;
+    if (hour === 12) return '12 PM';
+    return `${hour - 12} PM`;
+  }
+
   static async getCategoryChartData(userId, startDate, endDate) {
     const data = await Expense.aggregate([
       { $match: { userId, date: { $gte: new Date(startDate), $lte: new Date(endDate) } } },
@@ -125,16 +174,28 @@ class Analytics {
       weekEnd.setDate(weekStart.getDate() + 6);
       weekEnd.setHours(23, 59, 59, 999);
 
-      const weekTotal = await Expense.aggregate([
+      const weekStats = await Expense.aggregate([
         { $match: { userId, date: { $gte: weekStart, $lte: weekEnd } } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 }
+          }
+        }
       ]);
 
+      const total = weekStats[0]?.total || 0;
+      const count = weekStats[0]?.count || 0;
+
       weekData.push({
+        _id: weeks - i, // Week number
         week: `Week ${weeks - i}`,
         startDate: weekStart,
         endDate: weekEnd,
-        total: weekTotal[0]?.total || 0
+        total,
+        count,
+        average: count > 0 ? total / count : 0
       });
     }
 

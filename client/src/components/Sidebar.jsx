@@ -44,7 +44,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
 
       <div className="mt-auto pt-6 border-t border-[var(--glass-border)]">
         <div className="flex items-center gap-3 p-3 bg-[var(--glass-bg)] rounded-xl border border-[var(--glass-border)] shadow-sm">
-            <UserButton afterSignOutUrl="/login" />
+            <UserButton afterSignOutUrl="/" />
             <div className="overflow-hidden">
                 <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{user?.fullName}</p>
                 <p className="text-xs text-[var(--text-secondary)] truncate">{user?.primaryEmailAddress?.emailAddress}</p>

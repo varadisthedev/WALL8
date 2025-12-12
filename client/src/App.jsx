@@ -91,7 +91,7 @@ function App() {
                 </>
               )}
 
-              {activeTab === 'insights' && <Insights />}
+              {activeTab === 'insights' && <Insights refreshTrigger={refreshKey} />}
 
               {activeTab === 'profile' && <Profile />}
 

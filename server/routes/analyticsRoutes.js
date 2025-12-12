@@ -30,7 +30,7 @@ router.get('/summary', async (req, res) => {
 
 // @route   GET /api/analytics/chart
 // @desc    Get chart data (weekly trend or category breakdown)
-// @query   type=weekly|category|daily, weeks=4, startDate=..., endDate=...
+// @query   type=weekly|category|daily|today, weeks=4, startDate=..., endDate=...
 router.get('/chart', async (req, res) => {
     try {
         const { type, weeks, startDate, endDate, year, month } = req.query;
@@ -44,6 +44,8 @@ router.get('/chart', async (req, res) => {
             const y = parseInt(year) || new Date().getFullYear();
             const m = parseInt(month) || new Date().getMonth();
             data = await Analytics.getDailyTrend(req.userId, y, m);
+        } else if (type === 'today') {
+            data = await Analytics.getTodayHourlyTrend(req.userId);
         } else if (type === 'heatmap') {
             data = await Analytics.getHeatmapData(req.userId);
         } else {
@@ -67,9 +69,9 @@ router.get('/chart', async (req, res) => {
 
 // @route   GET /api/analytics/ai-insights
 // @desc    Get AI-generated spending insights and tips
-router.get('/ai-insights', requireProfile, async (req, res) => {
+router.get('/ai-insights', async (req, res) => {
     try {
-        // Get user data
+        // Get user data (don't require profile completion)
         const user = await User.findOne({ clerkId: req.userId });
         if (!user) {
             return res.status(404).json({
@@ -81,18 +83,81 @@ router.get('/ai-insights', requireProfile, async (req, res) => {
         // Get expense summary
         const summary = await Analytics.getDashboardStats(req.userId);
 
-        // Get budget status
-        const budgetData = await user.getBudgetAnalysis();
+        // Calculate budget data manually
+        const Expense = require('../models/Expense');
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const currentMonthExpenses = await Expense.aggregate([
+            {
+                $match: {
+                    userId: req.userId,
+                    date: { $gte: startOfMonth }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$amount' },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const monthlyTotal = currentMonthExpenses[0]?.total || 0;
+        const monthlyCount = currentMonthExpenses[0]?.count || 0;
+        const monthlyAllowance = user.profile?.monthlyAllowance || 0;
+
+        const budgetData = {
+            currentMonth: {
+                total: monthlyTotal,
+                count: monthlyCount,
+                average: monthlyCount > 0 ? monthlyTotal / monthlyCount : 0
+            },
+            monthlyAllowance: monthlyAllowance,
+            remaining: Math.max(0, monthlyAllowance - monthlyTotal),
+            isOverBudget: monthlyAllowance > 0 && monthlyTotal > monthlyAllowance,
+            percentageUsed: monthlyAllowance > 0 ? (monthlyTotal / monthlyAllowance) * 100 : 0
+        };
+
+        // Get top categories for better insights (fix the mapping)
+        const topCategories = summary?.categoryBreakdown?.slice(0, 3).map(cat => ({
+            category: cat._id,
+            total: cat.total,
+            count: cat.count
+        })) || [];
+
+        // Check if user has any expenses
+        if (monthlyTotal === 0 && (!summary?.allTime?.total || summary.allTime.total === 0)) {
+            return res.status(200).json({
+                success: true,
+                data: {
+                    insights: [
+                        "You haven't added any expenses yet!",
+                        "Start tracking your expenses to get personalized AI insights.",
+                        "The more data you add, the better insights you'll receive."
+                    ],
+                    tips: [
+                        "Add your first expense to begin tracking",
+                        "Set up your monthly allowance in your profile",
+                        "Try to log expenses as soon as they happen"
+                    ]
+                }
+            });
+        }
 
         // Generate AI insights
         const insights = await geminiService.generateSpendingInsights(
             {
-                age: user.profile.age,
-                monthlyAllowance: user.profile.monthlyAllowance,
-                institution: user.profile.institution,
-                city: user.profile.city
+                age: user.profile?.age || 'Not specified',
+                monthlyAllowance: user.profile?.monthlyAllowance || 0,
+                institution: user.profile?.institution || 'Not specified',
+                city: user.profile?.city || 'Not specified'
             },
-            summary,
+            {
+                ...summary,
+                topCategories
+            },
             budgetData
         );
 
