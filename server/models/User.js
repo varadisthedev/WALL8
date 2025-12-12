@@ -206,12 +206,23 @@ userSchema.statics.findOrCreateFromClerk = async function (clerkUser) {
     let user = await this.findOne({ clerkId: clerkUser.id });
 
     if (!user) {
-        user = await this.create({
-            clerkId: clerkUser.id,
-            email: clerkUser.emailAddresses[0].emailAddress,
-            name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
-            profileCompleted: false
-        });
+        const email = clerkUser.emailAddresses[0].emailAddress;
+
+        // Handle case where user exists but has a different Clerk ID (e.g. re-registered)
+        user = await this.findOne({ email });
+
+        if (user) {
+            console.log(`Updating existing user ${email} with new Clerk ID`);
+            user.clerkId = clerkUser.id;
+            await user.save();
+        } else {
+            user = await this.create({
+                clerkId: clerkUser.id,
+                email: email,
+                name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+                profileCompleted: false
+            });
+        }
     }
 
     return user;
