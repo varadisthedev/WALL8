@@ -10,6 +10,7 @@ import { RecentExpenses } from "./components/RecentExpenses";
 import { DashboardStats } from "./components/DashboardStats";
 import { Insights } from "./components/Insights";
 import { Profile } from "./components/Profile";
+import { Heatmap } from "./components/Heatmap";
 
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -84,6 +85,9 @@ function App() {
                     <AddExpenses onExpenseAdded={handleExpenseAdded} />
                     <RecentExpenses refreshTrigger={refreshKey} />
                   </div>
+
+                  {/* Spending Activity Heatmap */}
+                  <Heatmap />
                 </>
               )}
 

@@ -53,26 +53,26 @@ export const Heatmap = () => {
     };
 
     return (
-        <div className="glass-card p-6 h-fit text-[var(--text-primary)] animate-fade-in">
-             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold flex items-center gap-2">
+        <div className="glass-card p-4 h-fit text-[var(--text-primary)] animate-fade-in">
+             <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold flex items-center gap-2">
                     <span className="p-1 bg-blue-500/10 rounded text-blue-500">
-                        <Activity className="w-5 h-5" />
+                        <Activity className="w-4 h-4" />
                     </span>
                     Spending Activity
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                    <span>Low</span>
-                    <div className="w-16 h-2 rounded bg-gradient-to-r from-blue-100 to-blue-600 dark:from-blue-900 dark:to-blue-400"></div>
-                    <span>High</span>
+                    <span>Less</span>
+                    <div className="w-12 h-2 rounded bg-gradient-to-r from-blue-100 to-blue-600 dark:from-blue-900 dark:to-blue-400"></div>
+                    <span>More</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-[auto_1fr] gap-4">
-                {/* Y-Axis Labels (Time) - Showing every 3 hours to save space, or just start/mid/end */}
-                <div className="flex flex-col justify-between text-xs text-[var(--text-secondary)] font-medium pt-8 pb-2">
-                    {hours.filter(h => h % 3 === 0).map(hour => (
-                        <div key={hour} className="h-6 flex items-center justify-end pr-2">
+            <div className="grid grid-cols-[auto_1fr] gap-2">
+                {/* Y-Axis Labels (Time) - Show fewer labels */}
+                <div className="flex flex-col justify-between text-[10px] text-[var(--text-secondary)] font-medium pt-6 pb-1">
+                    {hours.filter(h => h % 6 === 0).map(hour => (
+                        <div key={hour} className="h-4 flex items-center justify-end pr-1">
                             {hour === 0 ? '12 AM' : hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                         </div>
                     ))}
@@ -80,30 +80,16 @@ export const Heatmap = () => {
 
                 {/* Heatmap Grid */}
                 <div className="overflow-x-auto">
-                    <div className="grid grid-cols-7 gap-1 min-w-[300px]">
+                    <div className="grid grid-cols-7 gap-1 min-w-[200px]">
                          {/* X-Axis Labels (Days) */}
                          {days.map(day => (
-                            <div key={day.id} className="text-center text-xs font-semibold text-[var(--text-secondary)] mb-2">
+                            <div key={day.id} className="text-center text-[10px] font-semibold text-[var(--text-secondary)] mb-1">
                                 {day.label}
                             </div>
                         ))}
 
-                        {/* Grid Cells */}
-                        {/* We map columns (days) first, then rows (hours) inside? 
-                            No, CSS grid flows row by row usually. But we want columns of days.
-                            We can use grid-flow-col or just map accordingly.
-                            Let's map: for each Hour (row), render 7 Day cells.
-                        */}
-                       
+                        {/* Grid Cells - Square cells */}
                         <div className="contents">
-                           {/* Transposing to simpler mapping: We want columns to be days. 
-                               Actually, standard heatmap often has Time on Y and Days on X.
-                               So we render Row 0 (Hour 0) for all Days, then Row 1, etc.
-                           */}
-                           {/* Wait, standard grid fills rows. So if I have 7 cols, I should just render cells in order:
-                               (Mon, 0), (Tue, 0)... (Sun, 0)
-                               (Mon, 1), ...
-                           */}
                            {hours.map(hour => (
                                days.map(day => {
                                    const count = dataMap[`${day.id}-${hour}`] || 0;
@@ -111,17 +97,15 @@ export const Heatmap = () => {
                                    return (
                                        <div 
                                             key={`${day.id}-${hour}`}
-                                            className="h-6 rounded-sm transition-all hover:scale-110 relative group"
+                                            className="w-4 h-4 rounded-sm transition-all hover:scale-125 hover:z-10 relative group cursor-pointer"
                                             style={{ 
-                                                backgroundColor: `rgba(59, 130, 246, ${opacity})`, // Blue-500
-                                                // Border to separate empty cells better
+                                                backgroundColor: `rgba(59, 130, 246, ${opacity})`,
                                                 border: count === 0 ? '1px solid var(--glass-border)' : 'none'
                                             }}
-                                            title={`${day.label} ${hour}:00 - ${count} transactions`}
                                        >
                                            {count > 0 && (
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-10 whitespace-nowrap">
-                                                    {count} txn{count !== 1 && 's'}
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none z-10 whitespace-nowrap">
+                                                    {day.label} {hour === 0 ? '12 AM' : hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`} • {count} txn{count !== 1 && 's'}
                                                 </div>
                                            )}
                                        </div>

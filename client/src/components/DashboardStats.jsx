@@ -109,9 +109,6 @@ export const DashboardStats = () => {
                 <StatBox label="Total Transactions" value={budgetStatus.currentMonth?.count || 0} />
             </div>
 
-            <div className="mt-8">
-                <Heatmap />
-            </div>
         </div>
     );
 };

@@ -1,32 +1,76 @@
 import React, { useState, useEffect } from "react";
 import { useUser, SignOutButton } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { ErrorAlert } from "./ErrorAlert";
 import { Wallet, Calendar, Target, LogOut, Edit2, X, Save } from "lucide-react";
 
 export const Profile = () => {
     const { user } = useUser();
+    const navigate = useNavigate();
     const [profileData, setProfileData] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
     const [error, setError] = useState(null);
     const [successMsg, setSuccessMsg] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Fetch user profile from backend
     useEffect(() => {
         const fetchProfile = async () => {
+            if (!user) return;
+            
             try {
                 const res = await api.get('/user/profile');
                 if (res.data.success) {
                   setProfileData(res.data.data);
                   setFormData(res.data.data.profile || {});
                 }
+                setLoading(false);
             } catch (error) {
                 console.error("Error fetching profile", error);
+                console.error("Error response:", error.response);
+                console.error("Error status:", error.response?.status);
+                console.error("Error data:", error.response?.data);
+                
+                // If user not found (404), try to sync the user
+                if (error.response?.status === 404) {
+                    console.log("User not found, attempting to sync...");
+                    console.log("User object:", user);
+                    try {
+                        console.log("Calling /user/sync with:", { clerkUser: user });
+                        const syncRes = await api.post('/user/sync', { clerkUser: user });
+                        console.log("Sync response:", syncRes.data);
+                        
+                        if (syncRes.data.success) {
+                            // Check if profile is complete
+                            if (!syncRes.data.data.profileCompleted) {
+                                console.log("Profile incomplete, redirecting to onboarding");
+                                navigate('/onboarding');
+                            } else {
+                                console.log("Profile complete, retrying fetch");
+                                // Retry fetching profile
+                                const retryRes = await api.get('/user/profile');
+                                if (retryRes.data.success) {
+                                    setProfileData(retryRes.data.data);
+                                    setFormData(retryRes.data.data.profile || {});
+                                }
+                            }
+                        }
+                    } catch (syncError) {
+                        console.error("Sync error:", syncError);
+                        console.error("Sync error response:", syncError.response);
+                        console.error("Sync error data:", syncError.response?.data);
+                        setError(`Failed to initialize user profile: ${syncError.response?.data?.message || syncError.message}`);
+                    }
+                } else {
+                    setError(`Failed to load profile: ${error.response?.data?.message || error.message}`);
+                }
+                setLoading(false);
             }
         };
         fetchProfile();
-    }, []);
+    }, [user, navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,6 +97,16 @@ export const Profile = () => {
     };
 
     if (!user) return null;
+    
+    if (loading) {
+        return (
+            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                <div className="text-center p-10 text-[var(--text-secondary)]">
+                    Loading your profile...
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">

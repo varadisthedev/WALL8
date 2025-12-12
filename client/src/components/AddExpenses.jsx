@@ -12,14 +12,14 @@ export const AddExpenses = ({ onExpenseAdded }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (!amount || !category) {
-        alert("Please fill in amount and category");
+      if (!amount) {
+        alert("Please enter an amount");
         return;
       }
 
       await api.post('/expenses', {
         amount: Number(amount),
-        category,
+        category: category || undefined, // Let backend handle if empty
         date,
         note
       });
@@ -35,8 +35,16 @@ export const AddExpenses = ({ onExpenseAdded }) => {
       // alert("Expense added successfully!"); // Removed alert for smoother UX
     } catch (error) {
       console.error("Error adding expense", error);
+      console.error("Error response:", error.response?.data);
+      
       const message = error.response?.data?.message || "Failed to add expense";
-      alert(message);
+      
+      // Check if onboarding is required
+      if (error.response?.data?.requiresOnboarding) {
+        alert("Please complete your profile in the Profile tab before adding expenses!");
+      } else {
+        alert(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -48,26 +56,32 @@ export const AddExpenses = ({ onExpenseAdded }) => {
          <span className="p-1 bg-blue-100 rounded text-blue-600">
              <span className="w-5 h-5 block bg-blue-600 rounded-sm" />
          </span>
-         Add New Expense
+         Add Expense
       </h3>
+      
+      {/* AI Helper Message */}
+      {!category && note && (
+        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-blue-600">
+          <span className="font-semibold">✨ AI Auto-Categorization:</span> Leave category blank and add a description - AI will categorize it for you!
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[var(--text-secondary)] text-sm font-medium mb-1">Amount (₹)</label>
-          <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-400">₹</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] text-[var(--text-primary)] rounded-xl pl-8 pr-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all placeholder:text-gray-400"
-                placeholder="0.00"
-                min="0"
-              />
-          </div>
+          <label className="block text-[var(--text-secondary)] text-sm font-medium mb-1">Amount (₹) <span className="text-red-500">*</span></label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            className="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] text-[var(--text-primary)] rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all placeholder:text-gray-400"
+            step="0.01"
+            min="0"
+          />
         </div>
 
         <div>
-          <label className="block text-[var(--text-secondary)] text-sm font-medium mb-1">Category</label>
+          <label className="block text-[var(--text-secondary)] text-sm font-medium mb-1">Category (Optional - AI will auto-categorize)</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
