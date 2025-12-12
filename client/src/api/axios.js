@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+    // Use environment variable or fallback to deployed backend
+    baseURL: import.meta.env.VITE_API_URL || 'https://wall8-production.up.railway.app/api',
 });
 
 // Add a request interceptor to inject the Clerk token
