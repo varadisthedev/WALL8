@@ -221,6 +221,32 @@ class Analytics {
 
     return insights;
   }
+
+  static async getHeatmapData(userId) {
+    const data = await Expense.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: {
+            day: { $dayOfWeek: '$date' }, // 1=Sun, 7=Sat
+            hour: { $hour: '$date' }      // 0-23
+          },
+          count: { $sum: 1 },
+          total: { $sum: '$amount' }
+        }
+      },
+      {
+        $project: {
+          day: '$_id.day',
+          hour: '$_id.hour',
+          count: 1,
+          total: 1,
+          _id: 0
+        }
+      }
+    ]);
+    return data;
+  }
 }
 
 module.exports = Analytics;

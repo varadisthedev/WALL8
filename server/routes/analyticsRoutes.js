@@ -42,6 +42,8 @@ router.get('/chart', async (req, res) => {
             const y = parseInt(year) || new Date().getFullYear();
             const m = parseInt(month) || new Date().getMonth();
             data = await Analytics.getDailyTrend(req.userId, y, m);
+        } else if (type === 'heatmap') {
+            data = await Analytics.getHeatmapData(req.userId);
         } else {
             // Default to weekly
             const numWeeks = parseInt(weeks) || 4;
