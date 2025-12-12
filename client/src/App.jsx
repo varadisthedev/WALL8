@@ -1,5 +1,8 @@
 import "./App.css";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from "@clerk/clerk-react";
+import api from "./api/axios";
 import { Navbar } from "./components/Navbar";
 import { Sidebar } from "./components/Sidebar";
 import { AddExpenses } from "./components/AddExpenses";
@@ -11,24 +14,66 @@ import { Profile } from "./components/Profile";
 function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const { user, isLoaded } = useUser();
+  const navigate = useNavigate();
+  
+  // Theme Management
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
+
+  // Auth Sync & Onboarding Check
+  useEffect(() => {
+    if (isLoaded && user) {
+      const syncUser = async () => {
+        try {
+          // Sync user with backend
+          const res = await api.post('/user/sync', { clerkUser: user });
+          
+          // Check if profile is incomplete
+          if (res.data.success && !res.data.data.profileCompleted) {
+             console.log("Profile incomplete, redirecting to onboarding...");
+             navigate('/onboarding');
+          }
+        } catch (error) {
+           console.error("User sync error:", error);
+        }
+      };
+      syncUser();
+    }
+  }, [isLoaded, user, navigate]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const handleExpenseAdded = () => {
     setRefreshKey(prev => prev + 1);
   };
 
   return (
-    <div className="min-h-screen font-sans bg-orange-50/50 text-gray-800">
+    <div className="min-h-screen font-sans text-[var(--text-primary)] transition-colors duration-300">
       <div className="flex h-screen overflow-hidden">
         <SidebarBase activeTab={activeTab} setActiveTab={setActiveTab} />
         
         <div className="flex-1 flex flex-col min-w-0 relative">
-          {/* Background Gradients */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-300/20 rounded-full blur-[100px] pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-200/20 rounded-full blur-[100px] pointer-events-none"></div>
-
-          <Navbar />
           
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 z-10 relative">
+          <Navbar isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+          
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 z-10 relative custom-scrollbar">
             <div className="max-w-7xl mx-auto space-y-8">
               
               {activeTab === 'dashboard' && (
@@ -55,7 +100,7 @@ function App() {
 }
 
 const SidebarBase = ({ activeTab, setActiveTab }) => (
-  <div className="hidden md:block h-full">
+  <div className="hidden md:block h-full z-20">
     <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
   </div>
 );
