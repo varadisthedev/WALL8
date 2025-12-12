@@ -21,12 +21,12 @@ const expenseSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: [true, 'Category is required'],
     enum: {
       values: ['Food', 'Travel', 'Shopping', 'Entertainment', 'Others'],
       message: '{VALUE} is not a valid category'
     },
-    trim: true
+    trim: true,
+    default: 'Others'
   },
   date: {
     type: Date,
@@ -264,9 +264,8 @@ expenseSchema.statics.getExpenses = async function (userId, queryParams) {
 };
 
 // Pre-save middleware - Log when expense is created
-expenseSchema.pre('save', function (next) {
+expenseSchema.pre('save', function () {
   console.log(`💰 New expense of ₹${this.amount} in ${this.category} category`);
-  next();
 });
 
 // Post-save middleware - Can be used for notifications
@@ -275,9 +274,8 @@ expenseSchema.post('save', function (doc) {
 });
 
 // Pre-remove middleware
-expenseSchema.pre('remove', function (next) {
+expenseSchema.pre('remove', function () {
   console.log(`🗑️ Deleting expense: ${this._id}`);
-  next();
 });
 
 // Create and export the model

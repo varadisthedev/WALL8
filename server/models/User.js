@@ -229,7 +229,7 @@ userSchema.statics.findOrCreateFromClerk = async function (clerkUser) {
 };
 
 // Pre-save middleware: Ensure budget consistency
-userSchema.pre('save', function (next) {
+userSchema.pre('save', function () {
     if (this.isModified('profile.monthlyAllowance') && !this.isNew) {
         // Recalculate budget if allowance changed
         const allowance = this.profile.monthlyAllowance;
@@ -238,7 +238,6 @@ userSchema.pre('save', function (next) {
             this.budget[category] = Math.round((allowance * percentage) / 100);
         });
     }
-    next();
 });
 
 module.exports = mongoose.model('User', userSchema);

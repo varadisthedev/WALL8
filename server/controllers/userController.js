@@ -6,16 +6,20 @@ const User = require('../models/User');
 // @access  Private
 exports.syncUser = async (req, res) => {
     try {
+        console.log('📥 Sync request received');
         const { clerkUser } = req.body;
 
         if (!clerkUser || !clerkUser.id) {
+            console.log('❌ Missing clerkUser data');
             return res.status(400).json({
                 success: false,
                 message: 'Clerk user data is required'
             });
         }
 
+        console.log('👤 Processing user:', clerkUser.emailAddresses?.[0]?.emailAddress);
         const user = await User.findOrCreateFromClerk(clerkUser);
+        console.log('✅ User synced:', user._id, 'Profile complete:', user.profileCompleted);
 
         res.status(200).json({
             success: true,
@@ -23,6 +27,8 @@ exports.syncUser = async (req, res) => {
             message: user.profileCompleted ? 'User synced' : 'Please complete your profile'
         });
     } catch (error) {
+        console.error('❌ Sync error:', error.message);
+        console.error('Stack:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Error syncing user',

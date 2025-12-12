@@ -1,18 +1,28 @@
 // controllers/expenseController.js
 const Expense = require('../models/Expense');
+const geminiService = require('../services/geminiService');
 
 // @desc    Add new expense
 // @route   POST /api/expenses
 // @access  Private
 exports.addExpense = async (req, res) => {
     try {
-        const { amount, category, date, note } = req.body;
+        let { amount, category, date, note } = req.body;
 
-        if (!amount || !category) {
+        if (!amount) {
             return res.status(400).json({
                 success: false,
-                message: 'Amount and category are required'
+                message: 'Amount is required'
             });
+        }
+
+        // Auto-categorize using AI if category is empty and note is provided
+        if (!category && note) {
+            console.log(`🤖 Auto-categorizing expense: "${note}"`);
+            category = await geminiService.categorizeExpense(note, amount);
+        } else if (!category) {
+            // Default to Others if no category and no note
+            category = 'Others';
         }
 
         const expense = await Expense.create({
