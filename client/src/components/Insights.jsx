@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Line, Bar } from 'react-chartjs-2';
+import { Activity } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -43,9 +44,9 @@ export const Insights = () => {
         fetchData();
     }, []);
 
-    if (loading) return <div className="text-center p-10 text-gray-500">Loading insights...</div>;
+    if (loading) return <div className="text-center p-10 text-[var(--text-secondary)]">Loading insights...</div>;
 
-    if (!chartData || chartData.length === 0) return <div className="text-center p-10 text-gray-500">No enough data for insights yet.</div>;
+    if (!chartData || chartData.length === 0) return <div className="text-center p-10 text-[var(--text-secondary)]">Not enough data for insights yet.</div>;
 
     // Process data for charts
     const weeks = chartData.map(d => `Week ${d._id}`);
@@ -58,9 +59,13 @@ export const Insights = () => {
             {
                 label: 'Weekly Spending (₹)',
                 data: totals,
-                borderColor: 'rgb(249, 115, 22)', // orange-500
-                backgroundColor: 'rgba(249, 115, 22, 0.5)',
+                borderColor: '#3b82f6', // blue-500
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
                 tension: 0.4,
+                pointBackgroundColor: '#2563eb', // blue-600
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#2563eb',
             },
         ],
     };
@@ -71,18 +76,23 @@ export const Insights = () => {
             {
                 label: 'Transaction Count',
                 data: counts,
-                backgroundColor: 'rgba(59, 130, 246, 0.6)', // blue-500
+                backgroundColor: 'rgba(6, 182, 212, 0.7)', // cyan-500
+                hoverBackgroundColor: 'rgba(6, 182, 212, 0.9)',
                 borderRadius: 8,
             },
         ],
     };
 
-    const options = {
+    // We can't easily adhere to CSS vars inside ChartJS options without a helper, 
+    // so we'll use a neutral gray that is readable on both light(white) and dark(dark blue) backgrounds.
+    // #9ca3af (gray-400) is usually good for ticks.
+    
+    const chartOptions = {
         responsive: true,
         plugins: {
             legend: {
                 position: 'top',
-                labels: { color: '#4b5563' }
+                labels: { color: '#94a3b8' } // slate-400, readable on dark
             },
             title: {
                 display: false,
@@ -90,45 +100,47 @@ export const Insights = () => {
         },
         scales: {
             y: {
-                grid: { color: 'rgba(0,0,0,0.05)' },
-                ticks: { color: '#6b7280' }
+                grid: { color: 'rgba(148, 163, 184, 0.1)' }, // slate-400 with opacity
+                ticks: { color: '#94a3b8' }
             },
             x: {
                 grid: { display: false },
-                ticks: { color: '#6b7280' }
+                ticks: { color: '#94a3b8' }
             }
         }
     };
 
     return (
         <div className="space-y-8 animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-orange-500 pl-4">Spending Insights</h2>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] border-l-4 border-blue-500 pl-4">Spending Insights</h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Weekly Trend Line Chart */}
-                <div className="glass-card p-6 bg-white/60">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Spending Trend (Last 4 Weeks)</h3>
+                <div className="glass-card p-6 bg-[var(--glass-bg)]">
+                    <h3 className="text-lg font-semibold text-[var(--text-secondary)] mb-4">Spending Trend (Last 4 Weeks)</h3>
                     <div className="h-72">
-                        <Line data={lineChartData} options={options} />
+                        <Line data={lineChartData} options={chartOptions} />
                     </div>
                 </div>
 
                 {/* Transaction Frequency Bar Chart */}
-                <div className="glass-card p-6 bg-white/60">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Transaction Frequency</h3>
+                <div className="glass-card p-6 bg-[var(--glass-bg)]">
+                    <h3 className="text-lg font-semibold text-[var(--text-secondary)] mb-4">Transaction Frequency</h3>
                     <div className="h-72">
-                        <Bar data={barChartData} options={options} />
+                        <Bar data={barChartData} options={chartOptions} />
                     </div>
                 </div>
             </div>
 
             {/* AI Insights Placeholder/Future */}
-            <div className="glass-card p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-100">
+            <div className="glass-card p-6 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 border border-blue-500/20">
                 <div className="flex items-start gap-4">
-                    <div className="p-3 bg-white rounded-full shadow-sm text-2xl">🤖</div>
+                    <div className="p-3 bg-[var(--glass-bg)] rounded-full shadow-sm text-blue-500 border border-blue-500/20">
+                        <Activity className="w-6 h-6" />
+                    </div>
                     <div>
-                        <h3 className="text-lg font-semibold text-indigo-900 mb-2">AI Spending Analysis</h3>
-                        <p className="text-indigo-700/80 leading-relaxed">
+                        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">AI Spending Analysis</h3>
+                        <p className="text-[var(--text-secondary)] leading-relaxed">
                             Based on your recent activity, your spending in <strong>Food</strong> is 15% higher than last week. 
                             Consider setting a budget for dining out to save approximately ₹500 next month.
                             <br/>
