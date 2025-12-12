@@ -34,7 +34,7 @@ export default function ClerkApp() {
     >
       <AxiosInterceptor />
       <Routes>
-        <Route path="/login/*" element={<Login />} />
+        <Route path="/login/*" element={<LandingPage autoOpenLogin={true} />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />

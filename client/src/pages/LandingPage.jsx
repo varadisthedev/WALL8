@@ -15,9 +15,14 @@ const colors = {
     lightest: '#BDD8E9',
 };
 
-const LandingPage = () => {
-    const [isLoginOpen, setIsLoginOpen] = useState(false);
+const LandingPage = ({ autoOpenLogin = false }) => {
+    const [isLoginOpen, setIsLoginOpen] = useState(autoOpenLogin);
     const navigate = useNavigate();
+
+    // Update state if prop changes
+    useEffect(() => {
+        if (autoOpenLogin) setIsLoginOpen(true);
+    }, [autoOpenLogin]);
 
     return (
         <div className="min-h-screen text-[#BDD8E9] relative overflow-hidden font-sans selection:bg-[#4E8EA2] selection:text-white"
