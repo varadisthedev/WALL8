@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { ClerkProvider, useAuth, SignedIn, SignedOut } from '@clerk/clerk-react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { ClerkProvider, useAuth, SignedIn, SignedOut, AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { setupAxiosInterceptors } from './api/axios';
 import App from './App';
 import Login from './pages/Login';
@@ -33,9 +33,10 @@ export default function ClerkApp() {
     >
       <AxiosInterceptor />
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/sign-up" element={<SignUpPage />} />
+        <Route path="/login/*" element={<Login />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
         
         <Route 
           path="/" 
@@ -45,12 +46,15 @@ export default function ClerkApp() {
                 <App />
               </SignedIn>
               <SignedOut>
-                 <Login />
+                 <Navigate to="/login" replace />
               </SignedOut>
             </>
           } 
         />
         <Route path="/dashboard" element={<App />} />
+        
+        {/* Catch all - Redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ClerkProvider>
   );
