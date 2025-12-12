@@ -1,21 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.25);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  /* Light Mode Tokens - Blue Theme */
+  --bg-primary: #bdd8e9;
+  /* Lightest Blue */
+  --text-primary: #001d39;
+  /* Darkest Blue */
+  --text-secondary: #0a4174;
+  /* Medium Dark Blue */
+  --glass-bg: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(10, 65, 116, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.5);
+
+  /* Gradients */
+  --gradient-blob-1: hsla(204, 70%, 70%, 0.3);
+  --gradient-blob-2: hsla(210, 75%, 65%, 0.3);
+
+  /* Accents */
+  --accent-primary: #0a4174;
+  --accent-secondary: #49769f;
+}
+
+.dark {
+  /* Dark Mode Tokens - Deep Ocean Theme */
+  --bg-primary: #001d39;
+  /* Darkest Blue */
+  --text-primary: #bdd8e9;
+  /* Lightest Blue */
+  --text-secondary: #7bbde8;
+  /* Medium Light Blue */
+  --glass-bg: rgba(10, 65, 116, 0.25);
+  --glass-border: rgba(123, 189, 232, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --input-bg: rgba(10, 65, 116, 0.3);
+
+  /* Gradients for Dark Mode */
+  --gradient-blob-1: hsla(204, 70%, 40%, 0.2);
+  --gradient-blob-2: hsla(210, 75%, 35%, 0.2);
+
+  /* Accents */
+  --accent-primary: #7bbde8;
+  --accent-secondary: #49769f;
 }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #fff7ed; /* orange-50 */
-  background-image: 
-    radial-gradient(at 0% 0%, hsla(27,96%,70%,0.2) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(25,91%,76%,0.2) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(27,96%,70%,0.2) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(25,91%,76%,0.2) 0px, transparent 50%);
-  color: #1f2937; /* gray-800 */
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  /* Dynamic Background Blobs */
+  background-image:
+    radial-gradient(at 0% 0%, var(--gradient-blob-1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, var(--gradient-blob-2) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, var(--gradient-blob-1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, var(--gradient-blob-2) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
 /* Glassmorphism Utilities */
@@ -28,20 +70,36 @@ body {
 }
 
 .glass-card {
-  @apply glass rounded-2xl transition-all duration-300 hover:shadow-lg;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--text-primary);
+  @apply rounded-2xl transition-all duration-300 hover:shadow-lg;
 }
 
-/* Custom Scrollbar for sleek look */
+/* Common form elements to inherit theme */
+input,
+select,
+textarea {
+  color: var(--text-primary) !important;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #fb923c; /* orange-400 */
+  background: var(--accent-secondary);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #ea580c; /* orange-600 */
+  background: var(--accent-primary);
 }
