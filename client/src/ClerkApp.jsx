@@ -24,92 +24,59 @@ function AxiosInterceptor() {
   return null;
 }
 
-// Custom SSO Callback component that handles redirect
-function SSOCallback() {
+// Auth completion component - runs after Clerk OAuth completes
+function AuthComplete() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded, user } = useAuth();
-  const [isChecking, setIsChecking] = React.useState(true);
-  const [status, setStatus] = React.useState('Initializing...');
+  const [status, setStatus] = React.useState('Checking profile...');
 
   useEffect(() => {
-    const handleCallback = async () => {
-      console.log('[SSOCallback] Starting callback handler...');
-      console.log('[SSOCallback] isLoaded:', isLoaded, 'isSignedIn:', isSignedIn, 'user:', !!user);
+    const checkProfile = async () => {
+      console.log('[AuthComplete] Checking profile status...');
       
       if (!isLoaded) {
-        setStatus('Loading authentication...');
+        setStatus('Loading...');
         return;
       }
-      
-      // Don't redirect if not signed in - wait for Clerk to complete OAuth handshake
-      if (!isSignedIn) {
-        console.log('[SSOCallback] Waiting for Clerk session to establish...');
-        setStatus('Completing authentication...');
-        return;
-      }
-      
-      if (!user) {
-        setStatus('Waiting for user data...');
+
+      if (!isSignedIn || !user) {
+        console.log('[AuthComplete] Not signed in, redirecting to landing...');
+        navigate('/', { replace: true });
         return;
       }
 
       try {
-        setStatus('Syncing with backend...');
-        console.log('[SSOCallback] Syncing user:', user.id);
+        console.log('[AuthComplete] User signed in, syncing with backend...');
+        setStatus('Syncing account...');
         
-        // Import api here to avoid circular dependency
         const { default: api } = await import('./api/axios');
         
-        // Sync user with backend (this creates the user record if new)
-        console.log('[SSOCallback] Calling /user/sync...');
         const syncResponse = await api.post('/user/sync', { 
           clerkUser: user 
         });
         
-        console.log('[SSOCallback] Sync response:', syncResponse.data);
+        console.log('[AuthComplete] Sync response:', syncResponse.data);
         
-        // Check profile completion from sync response
         if (syncResponse.data.success && !syncResponse.data.data.profileCompleted) {
-          console.log('[SSOCallback] New user, redirecting to onboarding...');
-          setStatus('Redirecting to onboarding...');
-          setTimeout(() => navigate('/onboarding', { replace: true }), 100);
+          console.log('[AuthComplete] New user, redirecting to onboarding...');
+          navigate('/onboarding', { replace: true });
         } else {
-          console.log('[SSOCallback] Existing user, redirecting to dashboard...');
-          setStatus('Redirecting to dashboard...');
-          setTimeout(() => navigate('/dashboard', { replace: true }), 100);
+          console.log('[AuthComplete] Existing user, redirecting to dashboard...');
+          navigate('/dashboard', { replace: true });
         }
       } catch (error) {
-        console.error('[SSOCallback] Error in OAuth callback:', error);
-        console.error('[SSOCallback] Error details:', error.response?.data || error.message);
-        setStatus('Error occurred, redirecting to onboarding...');
-        // For new users, if sync fails, still send to onboarding
-        setTimeout(() => navigate('/onboarding', { replace: true }), 100);
-      } finally {
-        setIsChecking(false);
+        console.error('[AuthComplete] Error:', error);
+        navigate('/onboarding', { replace: true });
       }
     };
 
-    handleCallback();
+    checkProfile();
   }, [isLoaded, isSignedIn, user, navigate]);
-
-  // Timeout safety: if stuck for more than 10 seconds, redirect to landing
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isChecking) {
-        console.error('[SSOCallback] Timeout: Authentication taking too long, redirecting to landing...');
-        navigate('/', { replace: true });
-      }
-    }, 10000);
-
-    return () => clearTimeout(timeout);
-  }, [isChecking, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#001D39]">
       <div className="text-white text-center">
-        <div className="text-2xl mb-4">
-          {isChecking ? 'Completing sign in...' : 'Redirecting...'}
-        </div>
+        <div className="text-2xl mb-4">Setting up your account...</div>
         <div className="text-sm opacity-70">{status}</div>
       </div>
     </div>
@@ -123,15 +90,26 @@ export default function ClerkApp() {
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
       navigate={(to) => navigate(to)}
-      afterSignInUrl="/dashboard"
-      afterSignUpUrl="/dashboard"
     >
       <AxiosInterceptor />
       <Routes>
         <Route path="/login/*" element={<LandingPage autoOpenLogin={true} />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/sso-callback" element={<SSOCallback />} />
+        
+        {/* Clerk OAuth callback - completes handshake then redirects to /auth/complete */}
+        <Route 
+          path="/sso-callback" 
+          element={
+            <AuthenticateWithRedirectCallback 
+              signInFallbackRedirectUrl="/auth/complete"
+              signUpFallbackRedirectUrl="/auth/complete"
+            />
+          } 
+        />
+        
+        {/* After OAuth completes, check profile and redirect appropriately */}
+        <Route path="/auth/complete" element={<AuthComplete />} />
         
         <Route 
           path="/" 
@@ -154,3 +132,4 @@ export default function ClerkApp() {
     </ClerkProvider>
   );
 }
+
