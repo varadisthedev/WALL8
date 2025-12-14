@@ -41,9 +41,10 @@ function SSOCallback() {
         return;
       }
       
+      // Don't redirect if not signed in - wait for Clerk to complete OAuth handshake
       if (!isSignedIn) {
-        console.log('[SSOCallback] User not signed in, redirecting to landing...');
-        navigate('/', { replace: true });
+        console.log('[SSOCallback] Waiting for Clerk session to establish...');
+        setStatus('Completing authentication...');
         return;
       }
       
@@ -90,6 +91,18 @@ function SSOCallback() {
 
     handleCallback();
   }, [isLoaded, isSignedIn, user, navigate]);
+
+  // Timeout safety: if stuck for more than 10 seconds, redirect to landing
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isChecking) {
+        console.error('[SSOCallback] Timeout: Authentication taking too long, redirecting to landing...');
+        navigate('/', { replace: true });
+      }
+    }, 10000);
+
+    return () => clearTimeout(timeout);
+  }, [isChecking, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#001D39]">
