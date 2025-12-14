@@ -27,23 +27,28 @@ function AxiosInterceptor() {
 // Custom SSO Callback component that handles redirect
 function SSOCallback() {
   const navigate = useNavigate();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, user } = useAuth();
   const [isChecking, setIsChecking] = React.useState(true);
 
   useEffect(() => {
     const handleCallback = async () => {
-      if (!isLoaded || !isSignedIn) return;
+      if (!isLoaded || !isSignedIn || !user) return;
 
       try {
-        console.log('✅ User signed in via OAuth, checking profile...');
+        console.log('✅ User signed in via OAuth, syncing with backend...');
         
         // Import api here to avoid circular dependency
         const { default: api } = await import('./api/axios');
         
-        // Check if user has completed onboarding
-        const response = await api.get('/user/profile');
+        // Sync user with backend (this creates the user record if new)
+        const syncResponse = await api.post('/user/sync', { 
+          clerkUser: user 
+        });
         
-        if (response.data.success && !response.data.data.profileCompleted) {
+        console.log('Sync response:', syncResponse.data);
+        
+        // Check profile completion from sync response
+        if (syncResponse.data.success && !syncResponse.data.data.profileCompleted) {
           console.log('📝 New user, redirecting to onboarding...');
           navigate('/onboarding', { replace: true });
         } else {
@@ -51,16 +56,17 @@ function SSOCallback() {
           navigate('/dashboard', { replace: true });
         }
       } catch (error) {
-        console.error('Error checking profile:', error);
-        // Fallback to dashboard on error
-        navigate('/dashboard', { replace: true });
+        console.error('Error in OAuth callback:', error);
+        // For new users, if sync fails, still send to onboarding
+        console.log('⚠️ Error occurred, defaulting to onboarding...');
+        navigate('/onboarding', { replace: true });
       } finally {
         setIsChecking(false);
       }
     };
 
     handleCallback();
-  }, [isLoaded, isSignedIn, navigate]);
+  }, [isLoaded, isSignedIn, user, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#001D39]">
