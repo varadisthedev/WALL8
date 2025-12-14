@@ -29,24 +29,35 @@ function AuthComplete() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded, user } = useAuth();
   const [status, setStatus] = React.useState('Checking profile...');
+  const hasChecked = React.useRef(false);
 
   useEffect(() => {
     const checkProfile = async () => {
-      console.log('[AuthComplete] Checking profile status...');
+      console.log('[AuthComplete] State:', { isLoaded, isSignedIn, hasUser: !!user, hasChecked: hasChecked.current });
       
+      // Wait for Clerk to be fully loaded
       if (!isLoaded) {
-        setStatus('Loading...');
+        setStatus('Loading authentication...');
         return;
       }
 
+      // If not signed in after loading, redirect to landing
       if (!isSignedIn || !user) {
-        console.log('[AuthComplete] Not signed in, redirecting to landing...');
+        console.log('[AuthComplete] Not authenticated, redirecting to landing...');
         navigate('/', { replace: true });
         return;
       }
 
+      // Only check profile once
+      if (hasChecked.current) {
+        console.log('[AuthComplete] Already checked profile, skipping...');
+        return;
+      }
+
+      hasChecked.current = true;
+
       try {
-        console.log('[AuthComplete] User signed in, syncing with backend...');
+        console.log('[AuthComplete] User authenticated, syncing with backend...');
         setStatus('Syncing account...');
         
         const { default: api } = await import('./api/axios');
@@ -58,14 +69,15 @@ function AuthComplete() {
         console.log('[AuthComplete] Sync response:', syncResponse.data);
         
         if (syncResponse.data.success && !syncResponse.data.data.profileCompleted) {
-          console.log('[AuthComplete] New user, redirecting to onboarding...');
+          console.log('[AuthComplete] ❌ Profile incomplete - redirecting to onboarding...');
           navigate('/onboarding', { replace: true });
         } else {
-          console.log('[AuthComplete] Existing user, redirecting to dashboard...');
+          console.log('[AuthComplete] ✅ Profile complete - redirecting to dashboard...');
           navigate('/dashboard', { replace: true });
         }
       } catch (error) {
         console.error('[AuthComplete] Error:', error);
+        // On error, assume new user and send to onboarding
         navigate('/onboarding', { replace: true });
       }
     };
