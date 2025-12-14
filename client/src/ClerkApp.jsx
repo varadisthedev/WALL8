@@ -24,6 +24,25 @@ function AxiosInterceptor() {
   return null;
 }
 
+// Custom SSO Callback component that handles redirect
+function SSOCallback() {
+  const navigate = useNavigate();
+  const { isSignedIn, isLoaded } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      console.log('✅ User signed in via OAuth, redirecting to /dashboard');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#001D39]">
+      <div className="text-white text-xl">Completing sign in...</div>
+    </div>
+  );
+}
+
 export default function ClerkApp() {
   const navigate = useNavigate();
 
@@ -31,21 +50,15 @@ export default function ClerkApp() {
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
       navigate={(to) => navigate(to)}
+      afterSignInUrl="/dashboard"
+      afterSignUpUrl="/dashboard"
     >
       <AxiosInterceptor />
       <Routes>
         <Route path="/login/*" element={<LandingPage autoOpenLogin={true} />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route 
-          path="/sso-callback" 
-          element={
-            <AuthenticateWithRedirectCallback 
-              signInFallbackRedirectUrl="/dashboard"
-              signUpFallbackRedirectUrl="/dashboard"
-            />
-          } 
-        />
+        <Route path="/sso-callback" element={<SSOCallback />} />
         
         <Route 
           path="/" 
