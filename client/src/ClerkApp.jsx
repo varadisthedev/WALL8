@@ -37,7 +37,15 @@ export default function ClerkApp() {
         <Route path="/login/*" element={<LandingPage autoOpenLogin={true} />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
+        <Route 
+          path="/sso-callback" 
+          element={
+            <AuthenticateWithRedirectCallback 
+              signInFallbackRedirectUrl="/dashboard"
+              signUpFallbackRedirectUrl="/dashboard"
+            />
+          } 
+        />
         
         <Route 
           path="/" 
