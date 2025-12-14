@@ -28,17 +28,45 @@ function AxiosInterceptor() {
 function SSOCallback() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
+  const [isChecking, setIsChecking] = React.useState(true);
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      console.log('✅ User signed in via OAuth, redirecting to /dashboard');
-      navigate('/dashboard', { replace: true });
-    }
+    const handleCallback = async () => {
+      if (!isLoaded || !isSignedIn) return;
+
+      try {
+        console.log('✅ User signed in via OAuth, checking profile...');
+        
+        // Import api here to avoid circular dependency
+        const { default: api } = await import('./api/axios');
+        
+        // Check if user has completed onboarding
+        const response = await api.get('/user/profile');
+        
+        if (response.data.success && !response.data.data.profileCompleted) {
+          console.log('📝 New user, redirecting to onboarding...');
+          navigate('/onboarding', { replace: true });
+        } else {
+          console.log('👤 Existing user, redirecting to dashboard...');
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (error) {
+        console.error('Error checking profile:', error);
+        // Fallback to dashboard on error
+        navigate('/dashboard', { replace: true });
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    handleCallback();
   }, [isLoaded, isSignedIn, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#001D39]">
-      <div className="text-white text-xl">Completing sign in...</div>
+      <div className="text-white text-xl">
+        {isChecking ? 'Completing sign in...' : 'Redirecting...'}
+      </div>
     </div>
   );
 }
