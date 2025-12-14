@@ -29,8 +29,7 @@ const LandingPage = ({ autoOpenLogin = false }) => {
         if (!isLoaded) return;
         signIn.authenticateWithRedirect({
             strategy: 'oauth_google',
-            redirectUrl: '/sso-callback',
-            redirectUrlComplete: '/dashboard'
+            redirectUrl: '/sso-callback'
         });
     };
 
@@ -230,8 +229,7 @@ const LoginModal = ({ isOpen, onClose }) => {
         if (!isLoaded) return;
         signIn.authenticateWithRedirect({
             strategy: 'oauth_google',
-            redirectUrl: '/sso-callback',
-            redirectUrlComplete: '/dashboard'
+            redirectUrl: '/sso-callback'
         });
     };
 
