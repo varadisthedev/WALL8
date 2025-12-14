@@ -92,7 +92,7 @@ export default function Onboarding() {
                         <input
                             type="number"
                             required
-                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium"
+                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 font-medium"
                             value={formData.age}
                             onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                             placeholder="20"
@@ -105,7 +105,7 @@ export default function Onboarding() {
                             <input
                                 type="number"
                                 required
-                                className="w-full p-4 pl-8 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium"
+                                className="w-full p-4 pl-8 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 font-medium"
                                 value={formData.monthlyAllowance}
                                 onChange={(e) => setFormData({ ...formData, monthlyAllowance: e.target.value })}
                                 placeholder="5000"
@@ -118,7 +118,7 @@ export default function Onboarding() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Institution / College</label>
                     <input
                         type="text"
-                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium"
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 font-medium"
                         value={formData.institution}
                         onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
                         placeholder="e.g. IIT Bombay"
@@ -130,7 +130,7 @@ export default function Onboarding() {
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Course</label>
                         <input
                             type="text"
-                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium"
+                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 font-medium"
                             value={formData.course}
                             onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                             placeholder="B.Tech"
@@ -140,7 +140,7 @@ export default function Onboarding() {
                         <label className="block text-sm font-semibold text-gray-700 mb-2">City</label>
                         <input
                             type="text"
-                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium"
+                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 font-medium"
                             value={formData.city}
                             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                             placeholder="Mumbai"

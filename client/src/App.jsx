@@ -27,26 +27,9 @@ function App() {
     return false;
   });
 
-  // Auth Sync & Onboarding Check
-  useEffect(() => {
-    if (isLoaded && user) {
-      const syncUser = async () => {
-        try {
-          // Sync user with backend
-          const res = await api.post('/user/sync', { clerkUser: user });
-          
-          // Check if profile is incomplete
-          if (res.data.success && !res.data.data.profileCompleted) {
-             console.log("Profile incomplete, redirecting to onboarding...");
-             navigate('/onboarding');
-          }
-        } catch (error) {
-           console.error("User sync error:", error);
-        }
-      };
-      syncUser();
-    }
-  }, [isLoaded, user, navigate]);
+  // We don't need to check onboarding here anymore
+  // AuthComplete component handles profile completion check before routing
+
 
   useEffect(() => {
     const root = window.document.documentElement;
